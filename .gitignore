@@ -1,0 +1,44 @@
+# Flet / Python
+build/
+.flet/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+.env
+
+# Flet cache
+.flet/
+dist/
+
+# Android
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# Gradle
+.gradle/
+gradle-app.setting
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Python package files
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Logs
+*.log
+hs_err_pid*.log

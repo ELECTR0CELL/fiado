@@ -1,0 +1,17 @@
+[project]
+name = "fiado"
+version = "1.0.0"
+description = "App para gestionar fiados de mi negocio"
+requires-python = ">=3.9"
+dependencies = [
+    "flet==1.0.4",
+]
+
+[tool.flet]
+org = "com.minegocio"
+product = "Fiado"
+company = "Mi Negocio"
+copyright = "Copyright (C) 2026"
+
+[tool.flet.app]
+path = "src"
