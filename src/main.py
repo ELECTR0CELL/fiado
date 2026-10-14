@@ -8,14 +8,15 @@ def main(page: ft.Page):
     page.scroll = ft.ScrollMode.AUTO
     page.bgcolor = ft.Colors.PINK_50
 
-    # ====== DETECTAR SI ES MÓVIL ======
-    def es_movil():
-        return page.width is not None and page.width < 600
-
-    # ====== ANCHO DINÁMICO PARA DIÁLOGOS ======
+    # ====== DETECTAR ANCHO ======
     def ancho_dialogo():
+        """Ancho del diálogo adaptado al tamaño del celular/pantalla"""
         ancho_pantalla = page.width if page.width else 400
-        return min(ancho_pantalla * 0.9, 450)
+        return min(ancho_pantalla - 30, 500)
+
+    def es_movil():
+        """Detecta si estamos en pantalla pequeña (celular)"""
+        return page.width is not None and page.width < 600
 
     # ====== DATOS DEL NEGOCIO ======
     datos_negocio = {
@@ -81,17 +82,14 @@ def main(page: ft.Page):
     # AJUSTES DEL NEGOCIO
     # =========================================================
     def abrir_ajustes(e):
-        campo_nombre = ft.TextField(label="Nombre del negocio", value=datos_negocio["nombre"],
-                                    border=borde_naranja())
+        campo_nombre = ft.TextField(label="Nombre del negocio", value=datos_negocio["nombre"], border=borde_naranja())
         campo_tipo = ft.Dropdown(
             label="Tipo de negocio", value=datos_negocio["tipo"],
             options=[ft.dropdown.Option(t) for t in
-                     ["Bodega", "Frutería", "Servicio Técnico", "Panadería",
-                      "Farmacia", "Ferretería", "Otro"]],
+                     ["Bodega", "Frutería", "Servicio Técnico", "Panadería", "Farmacia", "Ferretería", "Otro"]],
             border_color=ft.Colors.ORANGE_400,
         )
-        campo_telefono = ft.TextField(label="Teléfono del negocio", value=datos_negocio["telefono"],
-                                      border=borde_naranja())
+        campo_telefono = ft.TextField(label="Teléfono del negocio", value=datos_negocio["telefono"], border=borde_naranja())
         campo_direccion = ft.TextField(label="Dirección", value=datos_negocio["direccion"],
                                        multiline=True, min_lines=2, max_lines=3, border=borde_naranja())
 
@@ -109,22 +107,25 @@ def main(page: ft.Page):
             content=ft.Column(
                 controls=[
                     ft.Row(controls=[
-                        ft.Container(content=ft.Icon(ft.Icons.STORE, color=ft.Colors.WHITE, size=28),
+                        ft.Container(content=ft.Icon(ft.Icons.STORE, color=ft.Colors.WHITE, size=26),
                                      bgcolor=ft.Colors.ORANGE_700, padding=10, border_radius=50),
-                        ft.Text("Datos del Negocio", size=20, weight=ft.FontWeight.BOLD),
-                    ], spacing=12),
+                        ft.Text("Datos del Negocio", size=18, weight=ft.FontWeight.BOLD, expand=True),
+                    ], spacing=10),
                     ft.Divider(),
                     campo_nombre, campo_tipo, campo_telefono, campo_direccion,
-                    ft.Divider(height=15, color=ft.Colors.TRANSPARENT),
+                    ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
                     ft.Row(controls=[
-                        ft.Button("Cancelar", on_click=lambda e: page.pop_dialog()),
-                        ft.Button("Guardar", on_click=guardar, bgcolor=ft.Colors.ORANGE_700, color=ft.Colors.WHITE),
-                    ], alignment=ft.MainAxisAlignment.END),
+                        ft.Button("Cancelar", on_click=lambda e: page.pop_dialog(), expand=True),
+                        ft.Button("Guardar", on_click=guardar, bgcolor=ft.Colors.ORANGE_700,
+                                  color=ft.Colors.WHITE, expand=True),
+                    ], spacing=8),
                 ],
                 spacing=10, scroll=ft.ScrollMode.AUTO,
             ),
-            bgcolor=ft.Colors.WHITE, padding=20, border_radius=20, width=ancho_dialogo(),
-            shadow=ft.BoxShadow(blur_radius=25, color=ft.Colors.with_opacity(0.3, ft.Colors.ORANGE_700)),
+            bgcolor=ft.Colors.WHITE, padding=20, border_radius=20,
+            width=ancho_dialogo(),
+            height=min(page.height * 0.85 if page.height else 600, 650),
+            shadow=ft.BoxShadow(blur_radius=20, color=ft.Colors.with_opacity(0.3, ft.Colors.ORANGE_700)),
         )
         page.show_dialog(ft.AlertDialog(content=contenido, actions=[]))
 
@@ -134,13 +135,10 @@ def main(page: ft.Page):
     def abrir_registrar_fiado(e):
         campo_cliente = ft.TextField(label="Nombre del cliente", border=borde_rosa(), prefix_icon=ft.Icons.PERSON)
         campo_telefono_cliente = ft.TextField(label="Teléfono del cliente", border=borde_rosa(), prefix_icon=ft.Icons.PHONE)
-        campo_monto = ft.TextField(label="Monto (Bs.)", hint_text="Ej: 4.500,50", border=borde_rosa(),
-                                   prefix_icon=ft.Icons.ATTACH_MONEY)
-        campo_fecha = ft.TextField(label="Fecha de pago", hint_text="Ej: 15/11/2026", border=borde_rosa(),
-                                   prefix_icon=ft.Icons.CALENDAR_MONTH)
-        campo_descripcion = ft.TextField(label="Descripción", hint_text="Ej: 2 harinas, 1 aceite",
-                                         multiline=True, min_lines=2, max_lines=3, border=borde_rosa(),
-                                         prefix_icon=ft.Icons.SHOPPING_BAG)
+        campo_monto = ft.TextField(label="Monto (Bs.)", hint_text="Ej: 4.500,50", border=borde_rosa(), prefix_icon=ft.Icons.ATTACH_MONEY)
+        campo_fecha = ft.TextField(label="Fecha de pago", hint_text="Ej: 15/11/2026", border=borde_rosa(), prefix_icon=ft.Icons.CALENDAR_MONTH)
+        campo_descripcion = ft.TextField(label="Descripción", hint_text="Ej: 2 harinas", multiline=True,
+                                         min_lines=2, max_lines=3, border=borde_rosa(), prefix_icon=ft.Icons.SHOPPING_BAG)
 
         def guardar_fiado(e):
             nombre = campo_cliente.value.strip()
@@ -174,23 +172,25 @@ def main(page: ft.Page):
             content=ft.Column(
                 controls=[
                     ft.Row(controls=[
-                        ft.Container(content=ft.Icon(ft.Icons.ADD_CIRCLE, color=ft.Colors.WHITE, size=28),
+                        ft.Container(content=ft.Icon(ft.Icons.ADD_CIRCLE, color=ft.Colors.WHITE, size=26),
                                      bgcolor=ft.Colors.PINK_700, padding=10, border_radius=50),
-                        ft.Text("Registrar Fiado", size=20, weight=ft.FontWeight.BOLD),
-                    ], spacing=12),
+                        ft.Text("Registrar Fiado", size=18, weight=ft.FontWeight.BOLD, expand=True),
+                    ], spacing=10),
                     ft.Divider(),
                     campo_cliente, campo_telefono_cliente, campo_monto, campo_fecha, campo_descripcion,
-                    ft.Divider(height=15, color=ft.Colors.TRANSPARENT),
+                    ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
                     ft.Row(controls=[
-                        ft.Button("Cancelar", on_click=lambda e: page.pop_dialog()),
-                        ft.Button("Guardar", on_click=guardar_fiado, bgcolor=ft.Colors.PINK_700, color=ft.Colors.WHITE),
-                    ], alignment=ft.MainAxisAlignment.END),
+                        ft.Button("Cancelar", on_click=lambda e: page.pop_dialog(), expand=True),
+                        ft.Button("Guardar", on_click=guardar_fiado, bgcolor=ft.Colors.PINK_700,
+                                  color=ft.Colors.WHITE, expand=True),
+                    ], spacing=8),
                 ],
                 spacing=10, scroll=ft.ScrollMode.AUTO,
             ),
-            bgcolor=ft.Colors.WHITE, padding=20, border_radius=20, width=ancho_dialogo(),
+            bgcolor=ft.Colors.WHITE, padding=20, border_radius=20,
+            width=ancho_dialogo(),
             height=min(page.height * 0.85 if page.height else 600, 650),
-            shadow=ft.BoxShadow(blur_radius=25, color=ft.Colors.with_opacity(0.3, ft.Colors.PINK_700)),
+            shadow=ft.BoxShadow(blur_radius=20, color=ft.Colors.with_opacity(0.3, ft.Colors.PINK_700)),
         )
         page.show_dialog(ft.AlertDialog(content=contenido, actions=[]))
 
@@ -211,25 +211,28 @@ def main(page: ft.Page):
             content=ft.Column(
                 controls=[
                     ft.Row(controls=[
-                        ft.Container(content=ft.Icon(ft.Icons.EDIT_CALENDAR, color=ft.Colors.WHITE, size=28),
+                        ft.Container(content=ft.Icon(ft.Icons.EDIT_CALENDAR, color=ft.Colors.WHITE, size=26),
                                      bgcolor=ft.Colors.BLUE_600, padding=10, border_radius=50),
-                        ft.Text("Editar fecha", size=18, weight=ft.FontWeight.BOLD),
-                    ], spacing=12),
+                        ft.Text("Editar fecha", size=18, weight=ft.FontWeight.BOLD, expand=True),
+                    ], spacing=10),
                     ft.Divider(),
-                    ft.Text(f"Cliente: {fiado['cliente']}", size=15, weight=ft.FontWeight.BOLD),
-                    ft.Text(f"Fecha actual: {fiado['fecha_pago'] or 'No definida'}", size=13, color=ft.Colors.GREY_600),
+                    ft.Text(f"Cliente: {fiado['cliente']}", size=14, weight=ft.FontWeight.BOLD,
+                            overflow=ft.TextOverflow.ELLIPSIS),
+                    ft.Text(f"Fecha actual: {fiado['fecha_pago'] or 'No definida'}", size=12, color=ft.Colors.GREY_600),
                     ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
                     campo_nueva_fecha,
-                    ft.Divider(height=15, color=ft.Colors.TRANSPARENT),
+                    ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
                     ft.Row(controls=[
-                        ft.Button("Cancelar", on_click=lambda e: page.pop_dialog()),
-                        ft.Button("Guardar", on_click=guardar, bgcolor=ft.Colors.BLUE_600, color=ft.Colors.WHITE),
-                    ], alignment=ft.MainAxisAlignment.END),
+                        ft.Button("Cancelar", on_click=lambda e: page.pop_dialog(), expand=True),
+                        ft.Button("Guardar", on_click=guardar, bgcolor=ft.Colors.BLUE_600,
+                                  color=ft.Colors.WHITE, expand=True),
+                    ], spacing=8),
                 ],
                 spacing=10,
             ),
-            bgcolor=ft.Colors.WHITE, padding=20, border_radius=20, width=ancho_dialogo(),
-            shadow=ft.BoxShadow(blur_radius=25, color=ft.Colors.with_opacity(0.3, ft.Colors.BLUE_600)),
+            bgcolor=ft.Colors.WHITE, padding=20, border_radius=20,
+            width=ancho_dialogo(),
+            shadow=ft.BoxShadow(blur_radius=20, color=ft.Colors.with_opacity(0.3, ft.Colors.BLUE_600)),
         )
         page.show_dialog(ft.AlertDialog(content=contenido, actions=[]))
 
@@ -258,7 +261,7 @@ def main(page: ft.Page):
                 page.update()
                 return
             if abono_float > fiado["monto"]:
-                campo_abono.error_text = f"Excede el saldo ({formatear_monto(fiado['monto'])})"
+                campo_abono.error_text = f"Excede el saldo"
                 page.update()
                 return
 
@@ -268,7 +271,7 @@ def main(page: ft.Page):
             if fiado["monto"] <= 0.01:
                 page.pop_dialog()
                 page.pop_dialog()
-                eliminar_fiado(fiado, motivo="¡Fiado pagado completamente!")
+                eliminar_fiado(fiado, motivo="¡Fiado pagado!")
                 return
 
             page.pop_dialog()
@@ -280,12 +283,13 @@ def main(page: ft.Page):
             content=ft.Column(
                 controls=[
                     ft.Row(controls=[
-                        ft.Container(content=ft.Icon(ft.Icons.PAYMENTS, color=ft.Colors.WHITE, size=28),
+                        ft.Container(content=ft.Icon(ft.Icons.PAYMENTS, color=ft.Colors.WHITE, size=26),
                                      bgcolor=ft.Colors.GREEN_600, padding=10, border_radius=50),
-                        ft.Text("Registrar abono", size=18, weight=ft.FontWeight.BOLD),
-                    ], spacing=12),
+                        ft.Text("Registrar abono", size=18, weight=ft.FontWeight.BOLD, expand=True),
+                    ], spacing=10),
                     ft.Divider(),
-                    ft.Text(f"Cliente: {fiado['cliente']}", size=15, weight=ft.FontWeight.BOLD),
+                    ft.Text(f"Cliente: {fiado['cliente']}", size=14, weight=ft.FontWeight.BOLD,
+                            overflow=ft.TextOverflow.ELLIPSIS),
                     ft.Container(
                         content=ft.Column(controls=[
                             ft.Text(f"Saldo pendiente: {formatear_monto(fiado['monto'])}",
@@ -299,16 +303,18 @@ def main(page: ft.Page):
                     ),
                     ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
                     campo_abono,
-                    ft.Divider(height=15, color=ft.Colors.TRANSPARENT),
+                    ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
                     ft.Row(controls=[
-                        ft.Button("Cancelar", on_click=lambda e: page.pop_dialog()),
-                        ft.Button("Abonar", on_click=guardar, bgcolor=ft.Colors.GREEN_600, color=ft.Colors.WHITE),
-                    ], alignment=ft.MainAxisAlignment.END),
+                        ft.Button("Cancelar", on_click=lambda e: page.pop_dialog(), expand=True),
+                        ft.Button("Abonar", on_click=guardar, bgcolor=ft.Colors.GREEN_600,
+                                  color=ft.Colors.WHITE, expand=True),
+                    ], spacing=8),
                 ],
-                spacing=8,
+                spacing=10,
             ),
-            bgcolor=ft.Colors.WHITE, padding=20, border_radius=20, width=ancho_dialogo(),
-            shadow=ft.BoxShadow(blur_radius=25, color=ft.Colors.with_opacity(0.3, ft.Colors.GREEN_600)),
+            bgcolor=ft.Colors.WHITE, padding=20, border_radius=20,
+            width=ancho_dialogo(),
+            shadow=ft.BoxShadow(blur_radius=20, color=ft.Colors.with_opacity(0.3, ft.Colors.GREEN_600)),
         )
         page.show_dialog(ft.AlertDialog(content=contenido, actions=[]))
 
@@ -333,26 +339,27 @@ def main(page: ft.Page):
             content=ft.Column(
                 controls=[
                     ft.Row(controls=[
-                        ft.Container(content=ft.Icon(ft.Icons.DELETE, color=ft.Colors.WHITE, size=28),
+                        ft.Container(content=ft.Icon(ft.Icons.DELETE, color=ft.Colors.WHITE, size=26),
                                      bgcolor=ft.Colors.RED_600, padding=10, border_radius=50),
-                        ft.Text(titulo, size=17, weight=ft.FontWeight.BOLD),
-                    ], spacing=12),
+                        ft.Text(titulo, size=17, weight=ft.FontWeight.BOLD, expand=True),
+                    ], spacing=10),
                     ft.Divider(),
-                    ft.Text(f"Cliente: {fiado['cliente']}", size=14),
-                    ft.Text(f"Monto pendiente: {formatear_monto(fiado['monto'])}",
-                            size=14, color=ft.Colors.ORANGE_700),
+                    ft.Text(f"Cliente: {fiado['cliente']}", size=14, overflow=ft.TextOverflow.ELLIPSIS),
+                    ft.Text(f"Monto: {formatear_monto(fiado['monto'])}", size=14, color=ft.Colors.ORANGE_700),
                     ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
                     ft.Text("¿Eliminar este fiado?", size=14, color=ft.Colors.GREY_700),
-                    ft.Divider(height=15, color=ft.Colors.TRANSPARENT),
+                    ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
                     ft.Row(controls=[
-                        ft.Button("Cancelar", on_click=lambda e: page.pop_dialog()),
-                        ft.Button("Sí, eliminar", on_click=confirmar, bgcolor=ft.Colors.RED_600, color=ft.Colors.WHITE),
-                    ], alignment=ft.MainAxisAlignment.END),
+                        ft.Button("Cancelar", on_click=lambda e: page.pop_dialog(), expand=True),
+                        ft.Button("Eliminar", on_click=confirmar, bgcolor=ft.Colors.RED_600,
+                                  color=ft.Colors.WHITE, expand=True),
+                    ], spacing=8),
                 ],
-                spacing=8,
+                spacing=10,
             ),
-            bgcolor=ft.Colors.WHITE, padding=20, border_radius=20, width=ancho_dialogo(),
-            shadow=ft.BoxShadow(blur_radius=25, color=ft.Colors.with_opacity(0.3, ft.Colors.RED_600)),
+            bgcolor=ft.Colors.WHITE, padding=20, border_radius=20,
+            width=ancho_dialogo(),
+            shadow=ft.BoxShadow(blur_radius=20, color=ft.Colors.with_opacity(0.3, ft.Colors.RED_600)),
         )
         page.show_dialog(ft.AlertDialog(content=contenido, actions=[]))
 
@@ -364,12 +371,12 @@ def main(page: ft.Page):
             contenido_lista = ft.Container(
                 content=ft.Column(controls=[
                     ft.Icon(ft.Icons.CHECK_CIRCLE, color=ft.Colors.GREEN_400, size=60),
-                    ft.Text("Aún no hay fiados registrados", size=16,
-                            weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700),
-                    ft.Text("Toca 'Registrar nuevo fiado' para agregar el primero",
-                            size=12, color=ft.Colors.GREY_500),
+                    ft.Text("Aún no hay fiados registrados", size=15,
+                            weight=ft.FontWeight.BOLD, color=ft.Colors.GREY_700, text_align=ft.TextAlign.CENTER),
+                    ft.Text("Toca 'Registrar nuevo fiado'", size=12,
+                            color=ft.Colors.GREY_500, text_align=ft.TextAlign.CENTER),
                 ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=10),
-                padding=40,
+                padding=30,
             )
         else:
             filas = []
@@ -398,22 +405,24 @@ def main(page: ft.Page):
                 info_extra = f"  |  Abonado: {formatear_monto(abonado)}" if abonado > 0 else ""
                 progreso = (abonado / monto_original) if monto_original > 0 else 0
 
-                # En móvil, los botones se apilan
+                # Botones adaptables (apilados en móvil)
                 if es_movil():
                     botones = ft.Column(
                         controls=[
-                            ft.Button("💬 Recordar", on_click=crear_recordatorio(f),
-                                      bgcolor=ft.Colors.GREEN_600, color=ft.Colors.WHITE, width=ancho_dialogo() * 0.85),
                             ft.Row(controls=[
+                                ft.Button("💬 Recordar", on_click=crear_recordatorio(f),
+                                          bgcolor=ft.Colors.GREEN_600, color=ft.Colors.WHITE, expand=True),
                                 ft.Button("💵 Abono", on_click=lambda e, fiado=f: registrar_abono(fiado),
                                           bgcolor=ft.Colors.BLUE_600, color=ft.Colors.WHITE, expand=True),
+                            ], spacing=6),
+                            ft.Row(controls=[
                                 ft.Button("📅 Fecha", on_click=lambda e, fiado=f: editar_fecha(fiado),
                                           bgcolor=ft.Colors.ORANGE_600, color=ft.Colors.WHITE, expand=True),
-                            ], spacing=5),
-                            ft.Button("🗑️ Eliminar", on_click=lambda e, fiado=f: eliminar_fiado(fiado),
-                                      bgcolor=ft.Colors.RED_600, color=ft.Colors.WHITE, width=ancho_dialogo() * 0.85),
+                                ft.Button("🗑️ Eliminar", on_click=lambda e, fiado=f: eliminar_fiado(fiado),
+                                          bgcolor=ft.Colors.RED_600, color=ft.Colors.WHITE, expand=True),
+                            ], spacing=6),
                         ],
-                        spacing=5,
+                        spacing=6,
                     )
                 else:
                     botones = ft.Row(
@@ -435,40 +444,41 @@ def main(page: ft.Page):
                         content=ft.Column(
                             controls=[
                                 ft.Row(controls=[
-                                    ft.Container(content=ft.Icon(ft.Icons.PERSON, color=ft.Colors.WHITE, size=20),
+                                    ft.Container(content=ft.Icon(ft.Icons.PERSON, color=ft.Colors.WHITE, size=18),
                                                  bgcolor=ft.Colors.ORANGE_400, padding=8, border_radius=50),
                                     ft.Column(controls=[
-                                        ft.Text(f["cliente"], weight=ft.FontWeight.BOLD, size=15),
-                                        ft.Text(f["descripcion"] or "(sin descripción)", size=12,
-                                                color=ft.Colors.GREY_600),
+                                        ft.Text(f["cliente"], weight=ft.FontWeight.BOLD, size=14,
+                                                overflow=ft.TextOverflow.ELLIPSIS),
+                                        ft.Text(f["descripcion"] or "(sin descripción)", size=11,
+                                                color=ft.Colors.GREY_600, overflow=ft.TextOverflow.ELLIPSIS),
                                     ], spacing=2, expand=True),
-                                    ft.Column(controls=[
-                                        ft.Text("Pendiente:", size=10, color=ft.Colors.GREY_600),
-                                        ft.Text(formatear_monto(f["monto"]), weight=ft.FontWeight.BOLD,
-                                                color=ft.Colors.ORANGE_700, size=16),
-                                    ], spacing=0, horizontal_alignment=ft.CrossAxisAlignment.END),
                                 ]),
                                 ft.Row(controls=[
-                                    ft.Icon(ft.Icons.CALENDAR_MONTH, size=14, color=ft.Colors.GREY_500),
-                                    ft.Text(f"Pago: {f['fecha_pago'] or 'No definida'}", size=11,
-                                            color=ft.Colors.GREY_500),
-                                ], spacing=5),
+                                    ft.Text(f"📅 {f['fecha_pago'] or 'Sin fecha'}", size=11,
+                                            color=ft.Colors.GREY_500, expand=True,
+                                            overflow=ft.TextOverflow.ELLIPSIS),
+                                ]),
                                 ft.Row(controls=[
-                                    ft.Icon(ft.Icons.PHONE, size=14, color=ft.Colors.GREY_500),
-                                    ft.Text(f"{f['telefono'] or 'Sin teléfono'}", size=11,
-                                            color=ft.Colors.GREY_500),
-                                ], spacing=5),
-                                ft.Text(f"Original: {formatear_monto(monto_original)}{info_extra}",
-                                        size=11, color=ft.Colors.GREY_500),
+                                    ft.Text(f"📞 {f['telefono'] or 'Sin teléfono'}", size=11,
+                                            color=ft.Colors.GREY_500, expand=True,
+                                            overflow=ft.TextOverflow.ELLIPSIS),
+                                ]),
+                                ft.Row(controls=[
+                                    ft.Text(f"Original: {formatear_monto(monto_original)}{info_extra}",
+                                            size=10, color=ft.Colors.GREY_500, expand=True,
+                                            overflow=ft.TextOverflow.ELLIPSIS),
+                                    ft.Text(formatear_monto(f["monto"]), weight=ft.FontWeight.BOLD,
+                                            color=ft.Colors.ORANGE_700, size=15),
+                                ]),
                                 ft.ProgressBar(value=progreso, color=ft.Colors.GREEN_500,
                                                bgcolor=ft.Colors.GREY_300, height=6),
                                 botones,
                             ],
                             spacing=8,
                         ),
-                        bgcolor=ft.Colors.WHITE, padding=15, border_radius=15,
+                        bgcolor=ft.Colors.WHITE, padding=12, border_radius=15,
                         margin=ft.Margin.only(bottom=10),
-                        shadow=ft.BoxShadow(blur_radius=8, color=ft.Colors.with_opacity(0.15, ft.Colors.BLACK)),
+                        shadow=ft.BoxShadow(blur_radius=6, color=ft.Colors.with_opacity(0.12, ft.Colors.BLACK)),
                     )
                 )
             contenido_lista = ft.Column(controls=filas, spacing=5)
@@ -479,90 +489,94 @@ def main(page: ft.Page):
             content=ft.Column(
                 controls=[
                     ft.Row(controls=[
-                        ft.Container(content=ft.Icon(ft.Icons.ACCOUNT_BALANCE_WALLET, color=ft.Colors.WHITE, size=26),
+                        ft.Container(content=ft.Icon(ft.Icons.ACCOUNT_BALANCE_WALLET, color=ft.Colors.WHITE, size=24),
                                      bgcolor=ft.Colors.ORANGE_700, padding=10, border_radius=50),
                         ft.Column(controls=[
-                            ft.Text("Cartera por cobrar", size=20, weight=ft.FontWeight.BOLD),
-                            ft.Text(f"Total: {formatear_monto(total)}", size=15,
-                                    weight=ft.FontWeight.BOLD, color=ft.Colors.ORANGE_700),
-                        ], spacing=2),
-                    ], spacing=12),
+                            ft.Text("Cartera por cobrar", size=17, weight=ft.FontWeight.BOLD,
+                                    overflow=ft.TextOverflow.ELLIPSIS),
+                            ft.Text(f"Total: {formatear_monto(total)}", size=14,
+                                    weight=ft.FontWeight.BOLD, color=ft.Colors.ORANGE_700,
+                                    overflow=ft.TextOverflow.ELLIPSIS),
+                        ], spacing=2, expand=True),
+                    ], spacing=10),
                     ft.Divider(),
                     contenido_lista,
                     ft.Divider(height=10, color=ft.Colors.TRANSPARENT),
                     ft.Row(controls=[
                         ft.Button("Cerrar", on_click=lambda e: page.pop_dialog(),
-                                  bgcolor=ft.Colors.ORANGE_700, color=ft.Colors.WHITE),
-                    ], alignment=ft.MainAxisAlignment.END),
+                                  bgcolor=ft.Colors.ORANGE_700, color=ft.Colors.WHITE, expand=True),
+                    ]),
                 ],
                 spacing=10, scroll=ft.ScrollMode.AUTO,
             ),
-            bgcolor=ft.Colors.WHITE, padding=20, border_radius=20,
-            width=ancho_dialogo() if es_movil() else 550,
-            height=min(page.height * 0.85 if page.height else 600, 680),
-            shadow=ft.BoxShadow(blur_radius=25, color=ft.Colors.with_opacity(0.3, ft.Colors.ORANGE_700)),
+            bgcolor=ft.Colors.WHITE, padding=15, border_radius=20,
+            width=ancho_dialogo(),
+            height=min(page.height * 0.9 if page.height else 600, 700),
+            shadow=ft.BoxShadow(blur_radius=20, color=ft.Colors.with_opacity(0.3, ft.Colors.ORANGE_700)),
         )
         page.show_dialog(ft.AlertDialog(content=contenido, actions=[]))
 
     # =========================================================
     # ENCABEZADO
     # =========================================================
-    saludo = ft.Text("Hola, bienvenido a Fiado 👋", size=22 if es_movil() else 24,
-                     weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE)
+    saludo = ft.Text("Hola, bienvenido a Fiado 👋", size=18 if es_movil() else 22,
+                     weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE,
+                     overflow=ft.TextOverflow.ELLIPSIS)
     subtitulo = ft.Text(f"{datos_negocio['nombre']} - {datos_negocio['tipo']}",
-                        size=13, color=ft.Colors.WHITE_70)
-    info_negocio = ft.Text("Configura tu negocio en el engranaje ⚙️",
-                           size=11, color=ft.Colors.WHITE_70)
+                        size=12, color=ft.Colors.WHITE_70, overflow=ft.TextOverflow.ELLIPSIS)
+    info_negocio = ft.Text("Configura tu negocio en ⚙️",
+                           size=11, color=ft.Colors.WHITE_70, overflow=ft.TextOverflow.ELLIPSIS)
 
     boton_ajustes = ft.IconButton(icon=ft.Icons.SETTINGS, icon_color=ft.Colors.WHITE,
-                                  icon_size=26, tooltip="Configurar negocio", on_click=abrir_ajustes)
+                                  icon_size=24, tooltip="Configurar negocio", on_click=abrir_ajustes)
 
     encabezado = ft.Container(
         content=ft.Row(
             controls=[
-                ft.Column(controls=[saludo, subtitulo, info_negocio], spacing=4, expand=True),
+                ft.Column(controls=[saludo, subtitulo, info_negocio], spacing=3, expand=True),
                 boton_ajustes,
             ],
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             vertical_alignment=ft.CrossAxisAlignment.START,
         ),
-        bgcolor=ft.Colors.ORANGE_700, padding=20, border_radius=20,
-        margin=ft.Margin.only(left=15, right=15, top=15),
-        shadow=ft.BoxShadow(blur_radius=20, color=ft.Colors.with_opacity(0.4, ft.Colors.ORANGE_700)),
+        bgcolor=ft.Colors.ORANGE_700, padding=18, border_radius=20,
+        margin=ft.Margin.only(left=12, right=12, top=12),
+        shadow=ft.BoxShadow(blur_radius=15, color=ft.Colors.with_opacity(0.4, ft.Colors.ORANGE_700)),
     )
 
     # =========================================================
     # TARJETA NARANJA
     # =========================================================
     texto_total = ft.Text("Bs. 0,00", color=ft.Colors.WHITE,
-                          size=28 if es_movil() else 32, weight=ft.FontWeight.BOLD)
-    texto_subtitulo_total = ft.Text("Tu cartera está al día ✨", color=ft.Colors.WHITE_70, size=13)
+                          size=24 if es_movil() else 30, weight=ft.FontWeight.BOLD)
+    texto_subtitulo_total = ft.Text("Tu cartera está al día ✨", color=ft.Colors.WHITE_70, size=12)
 
     main_card = ft.Container(
         content=ft.Column(
             controls=[
                 ft.Row(controls=[
-                    ft.Icon(ft.Icons.ACCOUNT_BALANCE_WALLET, color=ft.Colors.WHITE, size=26),
-                    ft.Text("Total por cobrar", color=ft.Colors.WHITE, size=15, weight=ft.FontWeight.BOLD),
+                    ft.Icon(ft.Icons.ACCOUNT_BALANCE_WALLET, color=ft.Colors.WHITE, size=24),
+                    ft.Text("Total por cobrar", color=ft.Colors.WHITE, size=14,
+                            weight=ft.FontWeight.BOLD, expand=True,
+                            overflow=ft.TextOverflow.ELLIPSIS),
                 ], spacing=8),
-                ft.Divider(height=10, color=ft.Colors.WHITE_24),
+                ft.Divider(height=8, color=ft.Colors.WHITE_24),
                 texto_total, texto_subtitulo_total,
-                ft.Divider(height=5, color=ft.Colors.TRANSPARENT),
                 ft.Row(controls=[
-                    ft.Text("Ver lista completa", color=ft.Colors.WHITE, size=12, weight=ft.FontWeight.BOLD),
-                    ft.Icon(ft.Icons.ARROW_FORWARD, color=ft.Colors.WHITE, size=16),
+                    ft.Text("Ver lista", color=ft.Colors.WHITE, size=12, weight=ft.FontWeight.BOLD),
+                    ft.Icon(ft.Icons.ARROW_FORWARD, color=ft.Colors.WHITE, size=14),
                 ], alignment=ft.MainAxisAlignment.END),
             ],
-            spacing=8,
+            spacing=6,
         ),
         gradient=ft.LinearGradient(
             begin=ft.Alignment.TOP_LEFT, end=ft.Alignment.BOTTOM_RIGHT,
             colors=["#FF9800", "#F57C00", "#E65100"],
         ),
-        padding=25, border_radius=20,
-        margin=ft.Margin.only(left=15, right=15, top=15),
+        padding=20, border_radius=20,
+        margin=ft.Margin.only(left=12, right=12, top=12),
         on_click=abrir_cartera, ink=True,
-        shadow=ft.BoxShadow(blur_radius=25, color=ft.Colors.with_opacity(0.5, ft.Colors.ORANGE_700)),
+        shadow=ft.BoxShadow(blur_radius=20, color=ft.Colors.with_opacity(0.5, ft.Colors.ORANGE_700)),
     )
 
     # =========================================================
@@ -571,38 +585,34 @@ def main(page: ft.Page):
     start_button = ft.Container(
         content=ft.Row(
             controls=[
-                ft.Container(content=ft.Icon(ft.Icons.ADD_CIRCLE, color=ft.Colors.WHITE, size=30),
-                             bgcolor=ft.Colors.PINK_700, padding=12, border_radius=50),
+                ft.Container(content=ft.Icon(ft.Icons.ADD_CIRCLE, color=ft.Colors.WHITE, size=26),
+                             bgcolor=ft.Colors.PINK_700, padding=10, border_radius=50),
                 ft.Column(
                     controls=[
                         ft.Text("SALUD DE TU NEGOCIO", color=ft.Colors.PINK_700,
                                 size=10, weight=ft.FontWeight.BOLD),
                         ft.Text("Registrar nuevo fiado", color=ft.Colors.BLACK_87,
-                                size=16 if es_movil() else 18, weight=ft.FontWeight.BOLD),
-                        ft.Text("Toca para anotar una venta, gasto o fiado.",
-                                color=ft.Colors.GREY_700, size=12),
+                                size=15, weight=ft.FontWeight.BOLD),
+                        ft.Text("Toca para anotar un fiado", color=ft.Colors.GREY_700, size=11),
                     ],
-                    spacing=3, expand=True,
+                    spacing=2, expand=True,
                 ),
-                ft.Icon(ft.Icons.ARROW_FORWARD_IOS, color=ft.Colors.PINK_400, size=18),
+                ft.Icon(ft.Icons.ARROW_FORWARD_IOS, color=ft.Colors.PINK_400, size=16),
             ],
-            spacing=12,
+            spacing=10,
         ),
-        bgcolor=ft.Colors.WHITE, padding=18, border_radius=20,
-        margin=ft.Margin.only(left=15, right=15, bottom=15),
+        bgcolor=ft.Colors.WHITE, padding=15, border_radius=20,
+        margin=ft.Margin.only(left=12, right=12, bottom=12),
         border=ft.Border(
             top=ft.BorderSide(2, ft.Colors.PINK_100),
             right=ft.BorderSide(2, ft.Colors.PINK_100),
             bottom=ft.BorderSide(2, ft.Colors.PINK_100),
             left=ft.BorderSide(2, ft.Colors.PINK_100),
         ),
-        shadow=ft.BoxShadow(blur_radius=15, color=ft.Colors.with_opacity(0.2, ft.Colors.PINK_700)),
+        shadow=ft.BoxShadow(blur_radius=12, color=ft.Colors.with_opacity(0.2, ft.Colors.PINK_700)),
         on_click=abrir_registrar_fiado, ink=True,
     )
 
-    # =========================================================
-    # AGREGAR TODO
-    # =========================================================
     page.add(encabezado, main_card, start_button)
 
 ft.run(main)
