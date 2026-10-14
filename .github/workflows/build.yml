@@ -29,9 +29,20 @@ jobs:
       - name: Build APK
         run: flet build apk --yes
 
-      - name: Upload APK
+      - name: Find APK files
+        run: |
+          echo "Buscando archivos APK en el proyecto..."
+          find . -name "*.apk" -type f
+          echo "--- Listado de la carpeta build ---"
+          ls -la build/ || echo "no existe build"
+          ls -la build/apk/ || echo "no existe build/apk"
+
+      - name: Upload APK (búsqueda automática)
         uses: actions/upload-artifact@v4
         with:
           name: fiado-apk
-          path: build/apk/app-release.apk
+          path: |
+            **/*.apk
+            build/**/*.apk
+          if-no-files-found: warn
           retention-days: 30
