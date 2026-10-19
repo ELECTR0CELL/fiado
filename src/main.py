@@ -50,12 +50,13 @@ def main(page: ft.Page):
     page.title = "Fiado"
     page.theme_mode = ft.ThemeMode.LIGHT
     page.padding = 0
-    page.bgcolor = ft.Colors.BLUE_50 # Fondo azul muy claro
+    page.bgcolor = ft.Colors.BLUE_50
     page.window_width = 400
     page.window_height = 800
 
     config = cargar_config()
     datos_negocio = config["negocio"]
+    pin_guardado = config.get("pin")
     moneda_actual = config.get("moneda", "Bs.")
     fiados, ventas, productos = cargar_datos()
 
@@ -181,7 +182,7 @@ def main(page: ft.Page):
                 texto_total, texto_subtitulo_total,
                 ft.Row(controls=[ft.Text("Ver lista", color=ft.Colors.WHITE, size=13), ft.Icon(ft.Icons.ARROW_FORWARD, color=ft.Colors.WHITE, size=16)], alignment=ft.MainAxisAlignment.END),
             ], spacing=5),
-            gradient=ft.LinearGradient(colors=["#1E88E5", "#0D47A1"]), # Degradado azul
+            gradient=ft.LinearGradient(colors=["#1E88E5", "#0D47A1"]), 
             padding=25, border_radius=20,
             margin=ft.Margin.only(left=20, right=20, top=10), on_click=abrir_cartera, ink=True,
         )
@@ -375,7 +376,7 @@ def main(page: ft.Page):
         page.show_dialog(ft.AlertDialog(content=contenido, actions=[]))
 
     # =========================================================
-    # PANTALLA DE VENTAS (FILTRADO POR MES ACTUAL)
+    # PANTALLA DE VENTAS
     # =========================================================
     def abrir_ventas(e):
         page.controls.clear()
@@ -630,6 +631,7 @@ def main(page: ft.Page):
                 ft.Divider(),
                 item_menu(ft.Icons.INVENTORY, "Inventario", lambda e: (page.pop_dialog(), abrir_inventario(None))),
                 item_menu(ft.Icons.STORE, "Ajustes del Negocio", lambda e: (page.pop_dialog(), abrir_ajustes(None))),
+                item_menu(ft.Icons.LOCK, "Cambiar PIN", lambda e: (page.pop_dialog(), mostrar_pantalla_pin("cambiar"))),
                 ft.Container(height=10),
                 boton("Cerrar", lambda e: page.pop_dialog(), color=ft.Colors.GREY_400)
             ], spacing=10), 
@@ -637,7 +639,180 @@ def main(page: ft.Page):
         )
         page.show_dialog(ft.AlertDialog(content=contenido, actions=[]))
 
-    # Iniciar
-    mostrar_app_principal()
+    # =========================================================
+    # PANTALLA DE PIN (SEGURIDAD)
+    # =========================================================
+    def mostrar_pantalla_pin(modo, pin_temp=None):
+        page.controls.clear()
+        page.bottom_appbar = None
+
+        if modo == "elegir":
+            titulo = "Elige un PIN que recuerdes"
+            subtitulo_pin = "Son 4 números para volver a abrir tu tienda."
+            paso_actual = "1"
+        elif modo == "confirmar":
+            titulo = "Confirma tu PIN"
+            subtitulo_pin = "Ingresa otra vez los 4 números."
+            paso_actual = "2"
+        elif modo == "cambiar":
+            titulo = "Ingresa tu PIN actual"
+            subtitulo_pin = "Para cambiarlo, primero confirma el actual."
+            paso_actual = "3"
+        else: # ingresar
+            titulo = "Ingresa tu PIN"
+            subtitulo_pin = "Escribe los 4 números para entrar."
+            paso_actual = "3"
+
+        pin_ingresado = []
+        circulos = []
+
+        def actualizar_circulos():
+            for i, c in enumerate(circulos):
+                if i < len(pin_ingresado):
+                    c.bgcolor = ft.Colors.BLUE_700
+                    c.content = ft.Text(str(pin_ingresado[i]), color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD, size=18)
+                else:
+                    c.bgcolor = ft.Colors.GREY_200
+                    c.content = None
+            page.update()
+
+        def al_presionar_numero(num):
+            if len(pin_ingresado) < 4:
+                pin_ingresado.append(num)
+                actualizar_circulos()
+                if len(pin_ingresado) == 4:
+                    pin_str = "".join(str(n) for n in pin_ingresado)
+                    
+                    if modo == "elegir":
+                        mostrar_pantalla_pin("confirmar", pin_temp=pin_str)
+                    elif modo == "confirmar":
+                        if pin_str == pin_temp:
+                            config["pin"] = pin_str
+                            guardar_config(config)
+                            mostrar_app_principal()
+                        else:
+                            page.show_dialog(ft.AlertDialog(
+                                title=ft.Text("❌ PIN no coincide"),
+                                content=ft.Text("Los números no son iguales. Intenta de nuevo."),
+                                actions=[ft.Button("OK", on_click=lambda e: (page.pop_dialog(), mostrar_pantalla_pin("elegir")))],
+                            ))
+                    elif modo == "cambiar":
+                        if pin_str == pin_guardado:
+                            mostrar_pantalla_pin("elegir")
+                        else:
+                            page.show_dialog(ft.AlertDialog(
+                                title=ft.Text("❌ PIN incorrecto"),
+                                content=ft.Text("El PIN actual no es correcto."),
+                                actions=[ft.Button("OK", on_click=lambda e: (page.pop_dialog(), mostrar_pantalla_pin("cambiar")))],
+                            ))
+                    else: # ingresar
+                        if pin_str == pin_guardado:
+                            mostrar_app_principal()
+                        else:
+                            page.show_dialog(ft.AlertDialog(
+                                title=ft.Text("❌ PIN incorrecto"),
+                                content=ft.Text("El PIN no es correcto. Intenta de nuevo."),
+                                actions=[ft.Button("OK", on_click=lambda e: (page.pop_dialog(), mostrar_pantalla_pin("ingresar")))],
+                            ))
+
+        def borrar_ultimo(e):
+            if pin_ingresado:
+                pin_ingresado.pop()
+                actualizar_circulos()
+
+        def olvidar_pin(e):
+            def confirmar_olvido(ev):
+                config["pin"] = None
+                guardar_config(config)
+                page.pop_dialog()
+                mostrar_pantalla_pin("elegir")
+            page.show_dialog(ft.AlertDialog(
+                title=ft.Text("¿Olvidaste tu PIN?"),
+                content=ft.Text("Se borrará el PIN actual. Tus datos de fiados NO se borrarán."),
+                actions=[
+                    ft.Button("Cancelar", on_click=lambda e: page.pop_dialog()),
+                    ft.Button("Sí, restablecer", on_click=confirmar_olvido, bgcolor=ft.Colors.RED_600, color=ft.Colors.WHITE),
+                ],
+            ))
+
+        for i in range(4):
+            c = ft.Container(width=55, height=55, border_radius=50, bgcolor=ft.Colors.GREY_200, alignment=ft.Alignment.CENTER, content=None)
+            circulos.append(c)
+
+        def boton_num(num):
+            return ft.Container(
+                content=ft.Text(str(num), size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_900),
+                width=75, height=75, border_radius=50, bgcolor=ft.Colors.WHITE, alignment=ft.Alignment.CENTER,
+                on_click=lambda e, n=num: al_presionar_numero(n), ink=True,
+                shadow=ft.BoxShadow(blur_radius=8, color=ft.Colors.with_opacity(0.15, ft.Colors.BLACK)),
+            )
+
+        teclado = ft.Column(controls=[
+            ft.Row(controls=[boton_num(1), boton_num(2), boton_num(3)], alignment=ft.MainAxisAlignment.CENTER, spacing=15),
+            ft.Row(controls=[boton_num(4), boton_num(5), boton_num(6)], alignment=ft.MainAxisAlignment.CENTER, spacing=15),
+            ft.Row(controls=[boton_num(7), boton_num(8), boton_num(9)], alignment=ft.MainAxisAlignment.CENTER, spacing=15),
+            ft.Row(controls=[
+                ft.Container(width=75, height=75),
+                boton_num(0),
+                ft.Container(content=ft.Icon(ft.Icons.BACKSPACE, size=28, color=ft.Colors.BLUE_900), width=75, height=75, border_radius=50, bgcolor=ft.Colors.WHITE, alignment=ft.Alignment.CENTER, on_click=borrar_ultimo, ink=True, shadow=ft.BoxShadow(blur_radius=8, color=ft.Colors.with_opacity(0.15, ft.Colors.BLACK))),
+            ], alignment=ft.MainAxisAlignment.CENTER, spacing=15),
+        ], spacing=15)
+
+        pasos = ft.Row(controls=[
+            ft.Container(content=ft.Text("1", color=ft.Colors.WHITE, size=12, weight=ft.FontWeight.BOLD), bgcolor=ft.Colors.BLUE_700 if paso_actual == "1" else ft.Colors.GREY_300, width=28, height=28, border_radius=50, alignment=ft.Alignment.CENTER),
+            ft.Container(width=20, height=2, bgcolor=ft.Colors.GREY_300),
+            ft.Container(content=ft.Text("2", color=ft.Colors.WHITE, size=12, weight=ft.FontWeight.BOLD), bgcolor=ft.Colors.BLUE_700 if paso_actual == "2" else ft.Colors.GREY_300, width=28, height=28, border_radius=50, alignment=ft.Alignment.CENTER),
+        ], alignment=ft.MainAxisAlignment.CENTER, spacing=5) if modo in ["elegir", "confirmar"] else ft.Container()
+
+        icono_candado = ft.Container(content=ft.Icon(ft.Icons.LOCK_OUTLINE, size=40, color=ft.Colors.BLUE_700), bgcolor=ft.Colors.BLUE_50, padding=20, border_radius=50)
+        boton_olvido = ft.TextButton("¿Olvidaste tu PIN?", on_click=olvidar_pin) if modo == "ingresar" else ft.Container()
+
+        # Botón para cancelar si estamos en modo "cambiar" desde el menú
+        boton_cancelar_cambio = ft.TextButton("Cancelar cambio", on_click=lambda e: mostrar_app_principal()) if modo == "cambiar" else ft.Container()
+
+        contenido_pin = ft.Container(
+            content=ft.Column(
+                controls=[
+                    ft.Container(height=20),
+                    ft.Row(controls=[ft.Text("Fiado", size=32, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE), ft.Icon(ft.Icons.HOME, size=32, color=ft.Colors.WHITE)], alignment=ft.MainAxisAlignment.CENTER, spacing=8),
+                    ft.Container(height=20),
+                    ft.Container(
+                        content=ft.Column(controls=[
+                            pasos, ft.Container(height=15), icono_candado, ft.Container(height=15),
+                            ft.Text("PROTEGE TU TIENDA", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_700),
+                            ft.Text(titulo, size=22, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_900, text_align=ft.TextAlign.CENTER),
+                            ft.Text(subtitulo_pin, size=13, color=ft.Colors.GREY_600, text_align=ft.TextAlign.CENTER),
+                            ft.Container(height=15),
+                            ft.Container(
+                                content=ft.Column(controls=[
+                                    ft.Text("Escribe tus 4 números", size=13, weight=ft.FontWeight.BOLD, color=ft.Colors.BLUE_900),
+                                    ft.Container(height=10),
+                                    ft.Row(controls=circulos, alignment=ft.MainAxisAlignment.CENTER, spacing=15),
+                                    ft.Container(height=10),
+                                    ft.Text("No lo compartas. Este PIN es solo para ti.", size=11, color=ft.Colors.GREY_500, text_align=ft.TextAlign.CENTER),
+                                ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+                                bgcolor=ft.Colors.GREY_50, padding=20, border_radius=15,
+                            ),
+                            ft.Container(height=15), teclado, ft.Container(height=10), boton_olvido, boton_cancelar_cambio
+                        ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=8, scroll=ft.ScrollMode.AUTO),
+                        bgcolor=ft.Colors.WHITE, padding=25, border_radius=25, width=ancho_dialogo(),
+                        shadow=ft.BoxShadow(blur_radius=20, color=ft.Colors.with_opacity(0.3, ft.Colors.BLACK)),
+                    ),
+                    ft.Container(height=20),
+                ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, scroll=ft.ScrollMode.AUTO,
+            ),
+            gradient=ft.LinearGradient(begin=ft.Alignment.TOP_LEFT, end=ft.Alignment.BOTTOM_RIGHT, colors=["#1E88E5", "#0D47A1"]),
+            padding=15, expand=True,
+        )
+        page.add(contenido_pin)
+        page.update()
+
+    # =========================================================
+    # INICIO
+    # =========================================================
+    if pin_guardado:
+        mostrar_pantalla_pin("ingresar")
+    else:
+        mostrar_pantalla_pin("elegir")
 
 ft.run(main)
